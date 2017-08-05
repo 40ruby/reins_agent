@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+
+# filename: bin/reins_agent
+
+require "reins_agent"
+
+ReinsAgent.start

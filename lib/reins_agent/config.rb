@@ -3,9 +3,9 @@
 # filename: config.rb
 require 'logger'
 
-module Reins
+module ReinsAgent
   class << self
-    attr_accessor :logger, :port
+    attr_accessor :logger, :client_key, :client_port, :server_host, :server_port
 
     def configure
       yield self
@@ -13,9 +13,12 @@ module Reins
   end
 end
 
-Reins.configure do |config|
-  config.logger       = Logger.new(ENV['REINS_AGENT_LOGGER'] || "/tmp/reins_agent.log")
-  config.port         = ENV['REINS_AGENT_PORT'] || 24_368
+ReinsAgent.configure do |config|
+  config.logger      = Logger.new(ENV['REINS_AGENT_LOGGER'] || "/tmp/reins_agent.log")
+  config.client_key  = ENV['REINS_AGENT_KEY']  || "40ruby"
+  config.client_port = ENV['REINS_AGENT_PORT'] || 24_368
+  config.server_host = ENV['REINS_SERVER_HOST'] || "127.0.0.1"
+  config.server_port = ENV['REINS_PORT'] || 16_383
 end
 
-Reins.logger.level = ENV['REINS_AGENT_LOGLEVEL'] ? eval("Logger::#{ENV['REINS_AGENT_LOGLEVEL']}") : Logger::WARN
+ReinsAgent.logger.level = ENV['REINS_AGENT_LOGLEVEL'] ? eval("Logger::#{ENV['REINS_AGENT_LOGLEVEL']}") : Logger::WARN
