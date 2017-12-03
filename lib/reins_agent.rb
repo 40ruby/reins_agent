@@ -9,8 +9,8 @@ require "socket"
 
 module ReinsAgent
   class << self
-    def run_agent
-      ReinsAgent.logger.info("Reins Agent #{VERSION} を #{ReinsAgent.client_port} で起動します")
+    def run_agent(port)
+      ReinsAgent.logger.info("Reins Agent #{VERSION} を #{port} で起動します")
       throw unless (@cert_key = ReinsAgent.exec("#{ReinsAgent.client_key} auth").chomp)
       ReinsAgent.logger.debug("認証キー : #{@cert_key}")
       @agent = TCPServer.new(ReinsAgent.client_port)
@@ -25,10 +25,10 @@ module ReinsAgent
       ReinsAgent.logger.debug("addr = #{@addr}, keycode = #{@keycode}, command = #{@command}, options = #{@options}")
     end
 
-    def exit_agent
+    def exit_agent(agent)
       ReinsAgent.logger.info("Reins Agent #{VERSION} を終了します")
       ReinsAgent.exec("#{@cert_key} delete")
-      @agent.close
+      agent.close
       exit
     end
     # サーバへコマンドを送信し、その返り値を取得する
@@ -46,13 +46,13 @@ module ReinsAgent
   end
 
   def start
-    run_agent
+    agent = run_agent(ReinsAgent.client_port)
 
     puts ReinsAgent.exec("#{@cert_key} list")
 
     loop do
       begin
-        Thread.start(@agent.accept) do |r|
+        Thread.start(agent.accept) do |r|
           define_value(r)
           if @cert_key == @keycode
             r.puts("OK")
@@ -60,7 +60,7 @@ module ReinsAgent
           r.close
         end
       rescue Interrupt
-        exit_agent
+        exit_agent(agent)
       end
     end
   end
