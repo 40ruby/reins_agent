@@ -1,5 +1,3 @@
-# coding: utf-8
-
 # filename: reins_agent.rb
 require "reins_agent/config"
 require "reins_agent/version"
@@ -41,6 +39,19 @@ module ReinsAgent
       ReinsAgent.logger.debug("addr = #{@message['IP address']}, keycode = #{@message['keycode']}, command = #{@message['command']}, options = #{@message['options']}")
     end
 
+    # ブロックとして定義されたコードをスレッド化して実行する
+    # == パラメータ
+    # ブロック:: スレッドとして実行したいコード
+    # == 返り値
+    # Thread:: 生成されたスレッド
+    def threaded
+      Thread.new do
+        loop do
+          yield
+        end
+      end
+    end
+
     # エージェントの終了処理
     # == パラメータ
     # 特になし
@@ -79,8 +90,6 @@ module ReinsAgent
         r.puts("OK")
         r.close
       end
-    rescue Interrupt
-      exit_agent
     end
   end
 
@@ -90,9 +99,10 @@ module ReinsAgent
     list_command = JSON.generate("command" => "list", "keycode" => @cert_key.to_s)
     puts ReinsAgent.exec(list_command)
 
-    loop do
-      connect_agent
-    end
+    server_thread = threaded {connect_agent}
+    server_thread.join
+  rescue Interrupt
+    exit_agent
   end
 
   module_function :start
